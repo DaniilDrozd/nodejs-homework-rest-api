@@ -6,6 +6,7 @@ const { User } = require("../models/users");
 const fs = require("fs").promises;
 const path = require("path");
 const Jimp = require("jimp");
+const gravatar = require("gravatar");
 const register = async (req, res, next) => {
   const { name, email, password } = req.body;
   const user = await User.findOne({ email });
@@ -13,8 +14,12 @@ const register = async (req, res, next) => {
     throw HttpError(409, `User with ${email} already registered`);
   }
   const PasswordHash = await bcrypt.hash(password, 10);
-  const newUser = await User.create({ ...req.body, password: PasswordHash });
-
+  const newUser = await User.create({
+    ...req.body,
+    password: PasswordHash,
+    avatarURL,
+  });
+  const avatarURL = gravatar.url(email);
   res.status(201).json({
     email: newUser.email,
     name: newUser.name,
