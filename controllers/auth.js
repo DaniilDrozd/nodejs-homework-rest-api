@@ -3,6 +3,9 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { HttpError, ctrlWrapper } = require("../helpers");
 const { User } = require("../models/users");
+const fs = require("fs").promises;
+const path = require("path");
+const Jimp = require("jimp");
 const register = async (req, res, next) => {
   const { name, email, password } = req.body;
   const user = await User.findOne({ email });
@@ -51,9 +54,35 @@ const current = async (req, res) => {
   res.json({ email, name });
 };
 
+async function uploadAvatar(req, res, next) {
+  try {
+    if (req.file === undefined) {
+      throw HttpError(404, "You must add an avatar");
+    }
+    const avatarPath = path.join(
+      __dirname,
+      "../",
+      "public/avatars",
+      req.file.filename
+    );
+    const avatar = await Jimp.read(req.file.path);
+    avatar.resize(250, 250).quality(60).write(avatarPath);
+    await fs.rename(
+      req.file.path,
+      path.join(__dirname, "../", "public/avatars", req.file.filename)
+    );
+
+    await User.findByIdAndUpdate(req.user.id, { avatar: req.file.filename });
+    res.send("Avatar uploaded successfully");
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
   current: ctrlWrapper(current),
   logout: ctrlWrapper(logout),
+  uploadAvatar: ctrlWrapper(uploadAvatar),
 };
