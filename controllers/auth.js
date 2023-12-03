@@ -67,8 +67,7 @@ async function uploadAvatar(req, res, next) {
     );
     const avatar = await Jimp.read(req.file.path);
     avatar.resize(250, 250).quality(60).write(avatarPath);
-
-    await fs.rename(
+    await fs.unlink(
       req.file.path,
       path.join(__dirname, "../", "public/avatars", req.file.filename)
     );
