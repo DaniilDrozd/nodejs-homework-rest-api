@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { HttpError, ctrlWrapper } = require("../helpers");
 const { User } = require("../models/users");
+
+// register
 const register = async (req, res, next) => {
   const { name, email, password } = req.body;
   const user = await User.findOne({ email });
@@ -17,6 +19,8 @@ const register = async (req, res, next) => {
     name: newUser.name,
   });
 };
+
+// login
 const login = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
@@ -39,6 +43,8 @@ const login = async (req, res) => {
   });
 };
 
+
+// logout
 const logout = async (req, res) => {
   await User.findByIdAndUpdate(req.user, { token: null });
   res.status(204).json({
